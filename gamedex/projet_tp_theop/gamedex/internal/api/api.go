@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -30,7 +31,15 @@ type Tournament struct {
 var client = &http.Client{Timeout: 3 * time.Second}
 
 func FetchGames() ([]Game, error) {
-	resp, err := client.Get(baseURL + "/api/games")
+	return SearchGames("", "")
+}
+
+func SearchGames(q, genre string) ([]Game, error) {
+	params := url.Values{}
+	params.Set("q", q)
+	params.Set("genre", genre)
+
+	resp, err := client.Get(baseURL + "/api/games?" + params.Encode())
 	if err != nil {
 		return nil, err
 	}

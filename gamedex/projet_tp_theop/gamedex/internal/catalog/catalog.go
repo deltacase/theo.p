@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"slices"
 	"strings"
 
 	"gamedex/internal/api"
@@ -33,4 +34,23 @@ func TournamentsOf(tournaments []api.Tournament, gameID int) []api.Tournament {
 		}
 	}
 	return result
+}
+
+func Genres(games []api.Game) []string {
+	result := []string{}
+	for _, g := range games {
+		for _, genre := range g.Genres {
+			if !slices.Contains(result, genre) {
+				result = append(result, genre)
+			}
+		}
+	}
+	slices.Sort(result)
+	return result
+}
+
+func SortByLikes(games []api.Game, likes func(int) int) {
+	slices.SortStableFunc(games, func(a, b api.Game) int {
+		return likes(b.ID) - likes(a.ID)
+	})
 }

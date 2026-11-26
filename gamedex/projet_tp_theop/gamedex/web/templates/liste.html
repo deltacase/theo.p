@@ -1,9 +1,15 @@
 {{template "header" .}}
 <h1>Les jeux</h1>
 
-<form action="/jeux">
-  <input type="text" name="q" value="{{.Recherche}}" placeholder="Rechercher un jeu">
-  <button>Chercher</button>
+<form method="get" action="/jeux">
+  <input type="search" name="q" value="{{.Recherche}}" placeholder="Rechercher un jeu">
+  <select name="genre">
+    <option value="">Tous les genres</option>
+    {{range .Genres}}
+      <option value="{{.}}" {{if eq . $.Genre}}selected{{end}}>{{.}}</option>
+    {{end}}
+  </select>
+  <button>Filtrer</button>
 </form>
 
 {{if .Recherche}}
@@ -12,7 +18,7 @@
 
 <ul>
   {{range .Games}}
-    <li><a href="/jeux/{{.ID}}">{{.Name}}</a> ({{.Year}})</li>
+    <li><a href="/jeux/{{.Game.ID}}">{{.Game.Name}}</a> ({{.Game.Year}}) · ♥ {{.Likes}}</li>
   {{else}}
     <li>Aucun jeu trouvé</li>
   {{end}}
