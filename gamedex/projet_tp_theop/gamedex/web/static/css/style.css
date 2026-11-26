@@ -1,0 +1,19 @@
+
+header {
+  padding: 15px;
+  background: #2a2a3e;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  margin: 8px 0;
+}
+
+footer {
+  margin-top: 40px;
+  color: gray;
+}

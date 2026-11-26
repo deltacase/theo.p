@@ -1,0 +1,195 @@
+openapi: 3.0.3
+info:
+  title: Mini API GameDex
+  version: "1.0"
+  description: |
+    API de démonstration du cours « Application web en Go » (B1 Lyon Ynov Campus).
+    Les jeux sont réels, les tournois sont inventés.
+    Lancement : `go run ./api` depuis la racine du dépôt.
+servers:
+  - url: http://localhost:8081
+tags:
+  - name: Jeux
+  - name: Tournois
+  - name: Pour tester
+paths:
+  /api/games:
+    get:
+      tags: [Jeux]
+      summary: Liste des jeux, avec filtres facultatifs
+      parameters:
+        - name: q
+          in: query
+          description: Cherche dans le nom, sans tenir compte des majuscules
+          schema: { type: string }
+          example: cel
+        - name: genre
+          in: query
+          description: Ne garde que les jeux de ce genre (correspondance exacte)
+          schema: { type: string }
+          example: course
+        - name: year
+          in: query
+          description: Ne garde que les jeux sortis cette année-là
+          schema: { type: integer }
+          example: 2018
+      responses:
+        "200":
+          description: La liste des jeux (vide si aucun ne correspond)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Game" }
+  /api/games/{id}:
+    get:
+      tags: [Jeux]
+      summary: Un jeu
+      parameters:
+        - $ref: "#/components/parameters/GameID"
+      responses:
+        "200":
+          description: Le jeu
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Game" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/games/{id}/tournaments:
+    get:
+      tags: [Tournois]
+      summary: Les tournois d'un jeu
+      parameters:
+        - $ref: "#/components/parameters/GameID"
+      responses:
+        "200":
+          description: Les tournois du jeu (liste vide s'il n'en a pas)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Tournament" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/tournaments:
+    get:
+      tags: [Tournois]
+      summary: Tous les tournois, de tous les jeux
+      responses:
+        "200":
+          description: La liste des tournois. Le champ gameId relie chaque tournoi à son jeu
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Tournament" }
+  /api/stats:
+    get:
+      tags: [Pour tester]
+      summary: Statistiques protégées par une clé d'API
+      description: |
+        La clé s'envoie dans l'en-tête `X-API-Key`.
+        Pas de clé ou clé inconnue : 401. Clé `eleve` : 403. Clé `prof` : 200.
+      security:
+        - apiKey: []
+      responses:
+        "200":
+          description: Les statistiques
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  games: { type: integer, example: 12 }
+                  tournaments: { type: integer, example: 20 }
+        "401":
+          description: Clé absente ou inconnue
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: "clé absente ou inconnue : ajoutez l'en-tête X-API-Key" }
+        "403":
+          description: Clé reconnue, mais sans le droit de voir les statistiques
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: "clé reconnue, mais pas le droit de voir les statistiques" }
+  /api/broken:
+    get:
+      tags: [Pour tester]
+      summary: Répond toujours une erreur 500
+      responses:
+        "500":
+          description: Panne simulée
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: "panne simulée" }
+  /api/slow:
+    get:
+      tags: [Pour tester]
+      summary: La liste des jeux, après 5 secondes
+      description: Pour tester un client HTTP avec un timeout.
+      responses:
+        "200":
+          description: La liste des jeux
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Game" }
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        Clés de test : `eleve` (reconnue mais sans droits, donne un 403) et `prof` (donne un 200).
+        Sans clé, ou avec une autre valeur : 401.
+  parameters:
+    GameID:
+      name: id
+      in: path
+      required: true
+      description: Identifiant du jeu
+      schema: { type: integer }
+      example: 3
+  responses:
+    BadRequest:
+      description: L'identifiant n'est pas un nombre
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "l'identifiant doit être un nombre" }
+    NotFound:
+      description: Jeu introuvable
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Game:
+      type: object
+      properties:
+        id: { type: integer, example: 3 }
+        name: { type: string, example: Rocket League }
+        year: { type: integer, example: 2015 }
+        studio: { type: string, example: Psyonix }
+        genres:
+          type: array
+          items: { type: string }
+          example: [sport, course]
+    Tournament:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        gameId: { type: integer, example: 3 }
+        name: { type: string, example: Lyon Rocket Cup }
+        city: { type: string, example: Lyon }
+        date: { type: string, format: date, example: "2027-02-13" }
+        lat: { type: number, example: 45.764 }
+        lng: { type: number, example: 4.8357 }
+    Error:
+      type: object
+      properties:
+        error: { type: string, example: jeu introuvable }
