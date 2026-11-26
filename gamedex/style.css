@@ -1,14 +1,19 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #1e1e2e;
-  color: white;
-  text-align: center;
+
+header {
+  padding: 15px;
+  background: #2a2a3e;
 }
 
-h1 {
-  color: #f9a825;
+ul {
+  list-style: none;
+  padding: 0;
 }
 
-a {
-  color: #4fc3f7;
+li {
+  margin: 8px 0;
+}
+
+footer {
+  margin-top: 40px;
+  color: gray;
 }
